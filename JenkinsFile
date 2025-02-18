@@ -35,7 +35,7 @@ pipeline{
         stage("Git: Clone"){
             steps{
                 script{
-                    code_clone("https://github.com/Shubhankar-24x/Ai-career-coach.git", "main")
+                    clone("https://github.com/Shubhankar-24x/Ai-career-coach.git", "main")
                 }
 
             }
