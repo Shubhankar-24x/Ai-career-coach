@@ -13,24 +13,13 @@ pipeline{
     parameters{
 
         string(name: 'FRONTEND_DOCKER_TAG',defaultValue: '', description: 'Setting docker image for latest push')
-        string(name: 'BACKEND_DOCKER_TAG',defaultValue: '', description: 'Setting docker image for latest push')
+        //string(name: 'BACKEND_DOCKER_TAG',defaultValue: '', description: 'Setting docker image for latest push')
     }
 
 
     stages{
 
-        //Validate Parameterss
-
-        stage("Validate Parameters"){
-            steps{
-                script{
-                    if (params.FRONTEND_DOCKER_TAG == '' || params.BACKEND_DOCKER_TAG == ''){
-                        error("FRONTEND_DOCKER_TAG and BACKEND_DOCKER_TAG is must be provided..")
-                    }
-
-                }
-            }
-        }
+       
 
         stage("Workspace Cleanup"){
             steps{
