@@ -19,7 +19,7 @@ pipeline{
 
     stages{
 
-        //Validate Parameters
+        //Validate Parameterss
 
         stage("Validate Parameters"){
             steps{
