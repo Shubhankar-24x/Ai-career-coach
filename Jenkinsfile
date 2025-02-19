@@ -5,7 +5,7 @@ pipeline{
     agent any
 
     environment{
-        SONAR_HOME= tool "sonar"
+        SONAR_HOME= tool "Sonar"
     }
 
     // Building with Parameters
@@ -19,18 +19,7 @@ pipeline{
 
     stages{
 
-        //Validate Parameterss
-
-        stage("Validate Parameters"){
-            steps{
-                script{
-                    if (params.FRONTEND_DOCKER_TAG == '' || params.BACKEND_DOCKER_TAG == ''){
-                        error("FRONTEND_DOCKER_TAG and BACKEND_DOCKER_TAG is must be provided..")
-                    }
-
-                }
-            }
-        }
+       
 
         stage("Workspace Cleanup"){
             steps{
@@ -46,7 +35,7 @@ pipeline{
         stage("Git: Clone"){
             steps{
                 script{
-                    code_clone("https://github.com/Shubhankar-24x/Ai-career-coach.git", "main")
+                    clone("https://github.com/Shubhankar-24x/Ai-career-coach.git", "main")
                 }
 
             }
