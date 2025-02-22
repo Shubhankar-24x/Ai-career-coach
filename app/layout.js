@@ -13,9 +13,10 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
+    <ClerkProvider >
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className} suppressHydrationWarning>
-        <ClerkProvider>
+      <body className={`${inter.className}`} >
+        
           <ThemeProvider
             attribute="class"
             defaultTheme="dark"
@@ -33,8 +34,9 @@ export default function RootLayout({ children }) {
               </div>
             </footer>
           </ThemeProvider>
-        </ClerkProvider>
+       
       </body>
     </html>
+    </ClerkProvider>
   );
 }
