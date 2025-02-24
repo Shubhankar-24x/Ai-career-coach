@@ -1,10 +1,5 @@
-import {  SignUp } from '@clerk/nextjs';
+import { SignUp } from "@clerk/nextjs";
 
-
-const Page = () => {
-  return <SignUp/>
+export default function Page() {
+  return <SignUp routing="hash" />;
 }
-
-export default Page;
-
-
