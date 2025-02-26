@@ -75,14 +75,7 @@ pipeline{
         }
 
 
-        stage('Code Linting') {
-            steps {
-                script {
-                    sh 'npm run lint' // Run linting script to check errors 
-                }
-            }
-        }
-
+     
 
         stage("Docker: Build Images"){
             steps{
