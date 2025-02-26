@@ -94,13 +94,23 @@ pipeline{
             }
         }
 
-        stage("Docker Build & Deploy"){
+        stage("Docker: Image Push to DockerHub"){
             steps{
                 script{
-                    sh "docker compose down && docker compose up -d "
+                    docker_push()
                 }
             }
         }
+
+        
+
+       // stage("Docker Build & Deploy"){
+         //   steps{
+             //   script{
+                    sh "docker compose down && docker compose up -d "
+             //   }
+           // }
+       // }
 
 
 
