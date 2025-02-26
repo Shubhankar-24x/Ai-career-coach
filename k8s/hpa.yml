@@ -2,7 +2,7 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: carrer-coach-hpa
-  Namespace: career-coach
+  namespace: career-coach
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
