@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: carrer-coach-frontend-deployment
-  Namespace: career-coach
+  namespace: career-coach
 spec:
   replicas: 2
   selector:
