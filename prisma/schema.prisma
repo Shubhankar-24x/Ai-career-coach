@@ -100,7 +100,7 @@ model IndustryInsight{
 
 
 enum DemandLevel{
-  HiGH
+  HIGH
   MEDIUM
   LOW
 }
