@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
       - name: carrer-coach-frontend
-        image: shubhankar24/cc-k8-test:v0.1
+        image: shubhankar24/cc-argo:v1
         resources:      # Resource Quotas for limitation of CPU and Memory Usage
           requests:
             memory: "128Mi"
