@@ -35,10 +35,7 @@ jobs:
       - name: Run ESLint (Static Code Analysis)
         run: npm run lint
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v2
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+     
 
   test:
     name: Unit Testing
