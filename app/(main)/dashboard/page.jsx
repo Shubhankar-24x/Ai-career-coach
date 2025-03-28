@@ -4,10 +4,17 @@ import { getUserOnboardingStatus } from "@/actions/user";
 import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
-  const { isOnboarded } = await getUserOnboardingStatus();
+  let isOnboarded = false; // Default to false in case of an error
 
-  // If not onboarded, redirect to onboarding page
-  // Skip this check if already on the onboarding page
+  try {
+    const status = await getUserOnboardingStatus();
+    isOnboarded = status?.isOnboarded || false;
+  } catch (error) {
+    console.error("Error fetching onboarding status:", error.message);
+    // Optional: Handle errors differently (e.g., redirect to login)
+  }
+
+  // Redirect if the user is not onboarded
   if (!isOnboarded) {
     redirect("/onboarding");
   }

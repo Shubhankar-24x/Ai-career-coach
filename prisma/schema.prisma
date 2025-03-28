@@ -7,6 +7,13 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ✅ Define the Enum
+enum DemandLevel {
+  LOW
+  MEDIUM
+  HIGH
+}
+
 model User {
   id            String    @id @default(uuid())
   clerkUserId   String    @unique // clerk user id
@@ -69,8 +76,8 @@ model CoverLetter {
   @@index([userId])
 }
 
-// Combined Industry Trends and Salary Insights
-model IndustryInsight{
+// ✅ Updated IndustryInsight Model to Use the Enum
+model IndustryInsight {
   id            String    @id @default(cuid())
   industry      String    @unique  // The industry this data belongs to (e.g., "tech-software-development")
   
@@ -82,11 +89,11 @@ model IndustryInsight{
   
   // Industry trends
   growthRate    Float     // Industry growth rate
-  demandLevel  DemandLevel   // "High", "Medium", "Low"
+  demandLevel   DemandLevel  // ✅ Using the Enum instead of a String
   topSkills     String[]  // Most in-demand skills
   
   // Market conditions
-  marketOutlook MarketOutlook    // "Positive", "Neutral", "Negative"
+  marketOutlook String    // "Positive", "Neutral", "Negative"
   keyTrends     String[]  // Array of current industry trends
   
   // Learning suggestions
@@ -96,17 +103,4 @@ model IndustryInsight{
   nextUpdate    DateTime  // Scheduled update time
 
   @@index([industry])
-}
-
-
-enum DemandLevel{
-  HIGH
-  MEDIUM
-  LOW
-}
-
-enum MarketOutlook{
-  POSITIVE
-  NEUTRAL
-  NEGATIVE
 }
