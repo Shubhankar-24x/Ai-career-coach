@@ -1,8 +1,9 @@
 "use server";
-import { auth } from "@clerk/nextjs/server";
+
 import { db } from "@/lib/prisma";
-
-
+import { auth } from "@clerk/nextjs/server";
+import { revalidatePath } from "next/cache";
+import { generateAIInsights } from "./dashboard";
 
 export async function updateUser(data) {
   const { userId } = await auth();
@@ -27,18 +28,12 @@ export async function updateUser(data) {
 
         // If industry doesn't exist, create it with default values
         if (!industryInsight) {
-         
+          const insights = await generateAIInsights(data.industry);
+
           industryInsight = await db.industryInsight.create({
             data: {
               industry: data.industry,
-              salaryRanges:[],
-              growthRate:0,
-              demandLevel:"MEDIUM",
-              topSkills:[],
-              marketOutlook:"NEUTRAL",
-              keyTrends:[],
-              recommendedSkills:[],
-        
+              ...insights,
               nextUpdate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
             },
           });
@@ -64,8 +59,8 @@ export async function updateUser(data) {
       }
     );
 
-    
-    return {success: true , ...result};
+    revalidatePath("/");
+    return result.user;
   } catch (error) {
     console.error("Error updating user and industry:", error.message);
     throw new Error("Failed to update profile");
@@ -96,7 +91,7 @@ export async function getUserOnboardingStatus() {
       isOnboarded: !!user?.industry,
     };
   } catch (error) {
-    console.error("Error checking onboarding status:", error.message);
+    console.error("Error checking onboarding status:", error);
     throw new Error("Failed to check onboarding status");
   }
 }
