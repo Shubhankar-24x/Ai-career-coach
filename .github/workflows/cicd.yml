@@ -84,13 +84,13 @@ jobs:
         run: echo "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}" >> $GITHUB_ENV
 
       - name: Build project
-        run: npm run build
+        run: npm run build  # This will generate the `.next` folder
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts
-          path: dist/
+          name: nextjs-build
+          path: .next/  # Upload the .next folder as the build artifact
 
   docker:
     name: Docker Build and Push
@@ -105,8 +105,8 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: build-artifacts
-          path: dist/
+          name: nextjs-build
+          path: .next/  # Download the .next folder as build artifact
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -130,11 +130,14 @@ jobs:
       - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: .  # Use the root context for Docker build
+          dockerfile: Dockerfile  # Specify the Dockerfile if needed
           push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           load: true
+          build-args: |
+            NEXT_BUILD_PATH=.next  # Pass the .next directory as build context
 
       - name: Convert image name for Trivy scan
         id: lowercase_image
@@ -153,7 +156,7 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          context: .  # Use the root context for Docker build
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
