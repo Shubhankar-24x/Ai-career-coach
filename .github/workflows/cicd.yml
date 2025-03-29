@@ -36,7 +36,7 @@ jobs:
         run: npm run lint
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v1
+        uses: SonarSource/sonarcloud-github-action@v2
         with:
           organization: ${{ secrets.SONAR_ORG }}  # Set your SonarCloud organization
           projectKey: ${{ secrets.SONAR_PROJECT_KEY }}  # Set your SonarCloud project key
