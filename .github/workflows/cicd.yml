@@ -162,13 +162,21 @@ jobs:
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
 
-      - name: Push Docker image
-        run: docker push ${{ env.IMAGE_NAME_LOWER }}:sha-${{ github.sha }}
+      # - name: Push Docker image
+      #   run: docker push ${{ env.IMAGE_NAME_LOWER }}:sha-${{ github.sha }}
 
+      # - name: Set image tag output
+      #   id: set_output
+      #   run: echo "image_tag=sha-${{ github.sha }}" >> $GITHUB_OUTPUT
+
+      - name: Push Docker image
+        run: |
+          echo "Pushing: docker.io/${{ env.IMAGE_NAME_LOWER }}:sha-${{ github.sha }}"
+          docker push docker.io/${{ env.IMAGE_NAME_LOWER }}:sha-${{ github.sha }}
+          
       - name: Set image tag output
         id: set_output
         run: echo "image_tag=sha-${{ github.sha }}" >> $GITHUB_OUTPUT
-
 
 
   update-k8s:
