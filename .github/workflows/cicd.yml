@@ -98,8 +98,11 @@ jobs:
     outputs:
       image_tag: ${{ steps.set_output.outputs.image_tag }}
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
+      - name: Convert image name to lowercase
+        id: lowercase_image
+        run: echo "IMAGE_NAME_LOWER=$(echo $IMAGE_NAME | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -110,30 +113,29 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Extract Docker metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.IMAGE_NAME }}
-          tags: |
-            type=sha,format=long
-            type=ref,event=branch
-            latest
-
-      - name: Run Trivy File System Scan
+      - name: Run Trivy Filesystem Scan
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
-          scan-ref: '.'
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
           vuln-type: 'os,library'
           severity: 'CRITICAL,HIGH'
 
-      - name: Explicit Docker Build Command with Environment Variables
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME_LOWER }}
+          tags: |
+            type=sha,format=long
+            type=ref,event=branch
+            latest
+
+      - name: Build Docker image
         run: |
-          docker build -t ${{ env.IMAGE_NAME }}:sha-${{ github.sha }} \
+          docker build -t ${{ env.IMAGE_NAME_LOWER }}:sha-${{ github.sha }} \
             --build-arg NODE_ENV=production \
             --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }} \
             --build-arg CLERK_SECRET_KEY=${{ secrets.CLERK_SECRET_KEY }} \
@@ -145,14 +147,10 @@ jobs:
             --build-arg GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
             --build-arg NEXT_BUILD_PATH=.next .
 
-      - name: Convert image name for Trivy scan
-        id: lowercase_image
-        run: echo "LOWER_IMAGE_NAME=${{ env.IMAGE_NAME }}:sha-${{ github.sha }}" | tr '[:upper:]' '[:lower:]' >> $GITHUB_ENV
-
       - name: Run Trivy Image Scan
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: ${{ env.LOWER_IMAGE_NAME }}
+          image-ref: ${{ env.IMAGE_NAME_LOWER }}:sha-${{ github.sha }}
           format: 'table'
           exit-code: '1'
           ignore-unfixed: true
@@ -160,8 +158,7 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Push Docker image
-        run: |
-          docker push ${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
+        run: docker push ${{ env.IMAGE_NAME_LOWER }}:sha-${{ github.sha }}
 
       - name: Set image tag output
         id: set_output
