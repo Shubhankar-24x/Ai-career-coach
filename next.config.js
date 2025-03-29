@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+    distDir: ".next", // Ensures build output is in `.next`
     images: {
       remotePatterns: [
         {
