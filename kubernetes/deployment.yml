@@ -1,0 +1,61 @@
+# Namespace: career-coach
+kind: Namespace
+apiVersion: v1
+metadata:
+  name: career-coach
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: carrer-coach-frontend-deployment
+  namespace: career-coach
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: carrer-coach
+  template:
+    metadata:
+      name: carrer-coach-frontend-pod
+      labels:
+        app: carrer-coach
+    spec:
+      containers:
+      - name: carrer-coach-frontend
+        image: shubhankar24/cc-k8-test:v0.1
+        resources:      # Resource Quotas for limitation of CPU and Memory Usage
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
+        ports:
+        - containerPort: 3000
+        env:
+          - name: DATABASE_URL
+            valueFrom:
+            secretKeyRef:
+              name: cc-app-secret
+              key: DATABASE_URL
+
+          - name: CLERK_SECRET_KEY
+            valueFrom:
+            secretKeyRef:
+              name: cc-app-secret
+              key: CLERK_SECRET_KEY
+
+          - name: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+            valueFrom:
+            secretKeyRef:
+              name: cc-app-secret
+              key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+
+          - name: GEMINI_API_KEY
+            valueFrom:
+            secretKeyRef:
+              name: cc-app-secret
+              key: GEMINI_API_KEY
+          
+

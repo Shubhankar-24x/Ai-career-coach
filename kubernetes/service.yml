@@ -5,7 +5,7 @@ metadata:
   namespace: career-coach
 spec:
   selector:
-    app: carrer-coach
+    app: career-coach
   ports:
   - protocol: TCP 
     port: 3000
