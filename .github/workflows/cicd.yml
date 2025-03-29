@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ dev ]
     paths-ignore:
       - 'k8s/deployment.yaml'
   pull_request:
@@ -36,7 +36,7 @@ jobs:
         run: npm run lint
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarcloud-github-action@v4
+        uses: SonarSource/sonarcloud-github-action@v2
         with:
           organization: ${{ secrets.SONAR_ORG }}  # Set your SonarCloud organization
           projectKey: ${{ secrets.SONAR_PROJECT_KEY }}  # Set your SonarCloud project key
