@@ -93,8 +93,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nextjs-build
-          path: .next/
-          if-no-files-found: error  # Ensure failure if `.next/` is missing
+          path: .next/**  # Include all files inside .next/
+          if-no-files-found: error  # Ensure it fails if no files are found
+  # Ensure failure if `.next/` is missing
 
   docker:
     name: Docker Build and Push
@@ -110,7 +111,8 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: nextjs-build
-          path: .next/
+          path: .next  # Ensure correct extraction path
+
 
       - name: Verify .next folder after download
         run: ls -la .next/
