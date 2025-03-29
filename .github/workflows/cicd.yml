@@ -4,7 +4,11 @@ on:
   push:
     branches: [ main ]
     paths-ignore:
+<<<<<<< HEAD
       - 'k8s/deployment.yaml'
+=======
+      - 'kubernetes/deployment.yaml'
+>>>>>>> bdb220334cea49b2287ae60a20db4415513facce
   pull_request:
     branches: [ main ]
     types: [opened, synchronize, reopened]
@@ -16,12 +20,17 @@ env:
 
 jobs:
   sonarqube:
+<<<<<<< HEAD
     name: SonarCloud Code and Static Analysis
+=======
+    name: SonarCloud Code Analysis
+>>>>>>> bdb220334cea49b2287ae60a20db4415513facce
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # Full clone for accurate analysis
+<<<<<<< HEAD
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -36,6 +45,13 @@ jobs:
         run: npm run lint
 
      
+=======
+      
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+>>>>>>> bdb220334cea49b2287ae60a20db4415513facce
 
   test:
     name: Unit Testing
@@ -57,10 +73,37 @@ jobs:
       - name: Run tests
         run: npm test || echo "No tests found, would add tests in a real project"
 
+<<<<<<< HEAD
   build:
     name: Build Project
     runs-on: ubuntu-latest
     needs: [test]
+=======
+  lint:
+    name: Static Code Analysis
+    runs-on: ubuntu-latest
+    needs: [sonarqube]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+  build:
+    name: Build Project
+    runs-on: ubuntu-latest
+    needs: [test, lint]
+>>>>>>> bdb220334cea49b2287ae60a20db4415513facce
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
