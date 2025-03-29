@@ -23,8 +23,4 @@ module.exports = {
     "react-hooks/exhaustive-deps": "off",
     "react/no-unescaped-entities": "off",
   },
-
 };
-=======
-};
->>>>>>> bdb220334cea49b2287ae60a20db4415513facce
