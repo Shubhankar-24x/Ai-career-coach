@@ -10,6 +10,14 @@ RUN npm install
 # Copy all files
 COPY . .
 
+# Receive build-time environment variables
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ARG DATABASE_URL
+
+# Persist them as environment variables inside the build container
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+ENV DATABASE_URL=${DATABASE_URL}
+
 # Generate Prisma Client before running migrations
 RUN npx prisma generate
 
@@ -24,12 +32,15 @@ WORKDIR /app
 # Copy built app from build stage
 COPY --from=build /app .
 
-# Persist DATABASE_URL in the final image
+# Persist environment variables in the final runtime container
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 ARG DATABASE_URL
-ENV DATABASE_URL=${DATABASE_URL}
 
-# Ensure Prisma Migrations are applied at runtime
-CMD npx prisma migrate deploy && npm start
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+ENV DATABASE_URL=${DATABASE_URL}
 
 # Expose port
 EXPOSE 3000
+
+# Start the application
+CMD ["npm", "start"]
