@@ -136,16 +136,10 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t ${{ env.IMAGE_NAME_LOWER }}:sha-${{ github.sha }} \
-            --build-arg NODE_ENV=production \
-            --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }} \
-            --build-arg CLERK_SECRET_KEY=${{ secrets.CLERK_SECRET_KEY }} \
-            --build-arg NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in \
-            --build-arg NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up \
-            --build-arg NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/onboarding \
-            --build-arg NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/onboarding \
-            --build-arg DATABASE_URL=${{ secrets.DATABASE_URL }} \
-            --build-arg GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} \
-            --build-arg NEXT_BUILD_PATH=.next .
+          --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }} \
+          --build-arg CLERK_SECRET_KEY=${{ secrets.CLERK_SECRET_KEY }} \
+          --build-arg DATABASE_URL=${{ secrets.DATABASE_URL }} \
+          --build-arg GEMINI_API_KEY=${{ secrets.GEMINI_API_KEY }} .
 
       - name: Run Trivy Image Scan
         uses: aquasecurity/trivy-action@master
