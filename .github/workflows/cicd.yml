@@ -21,7 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Full clone for accurate analysis
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -38,8 +38,8 @@ jobs:
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
         with:
-          organization: ${{ secrets.SONAR_ORG }}  # Set your SonarCloud organization
-          projectKey: ${{ secrets.SONAR_PROJECT_KEY }}  # Set your SonarCloud project key
+          organization: ${{ secrets.SONAR_ORG }}
+          projectKey: ${{ secrets.SONAR_PROJECT_KEY }}
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
@@ -86,12 +86,15 @@ jobs:
       - name: Build project
         run: npm run build  # This will generate the `.next` folder
 
+      - name: Verify .next folder exists
+        run: ls -la .next/
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: nextjs-build  # Artifact name
-          path: .next/  # Correct path to upload
-      
+          name: nextjs-build
+          path: .next/
+          if-no-files-found: error  # Ensure failure if `.next/` is missing
 
   docker:
     name: Docker Build and Push
@@ -106,9 +109,11 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: nextjs-build  # Same artifact name
-          path: .next/  # Extract to correct location
-        # Download the .next folder as build artifact
+          name: nextjs-build
+          path: .next/
+
+      - name: Verify .next folder after download
+        run: ls -la .next/
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -133,13 +138,13 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .  # Use the root context for Docker build
-          dockerfile: Dockerfile  # Specify the Dockerfile if needed
+          dockerfile: Dockerfile
           push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           load: true
           build-args: |
-            NEXT_BUILD_PATH=.next  # Pass the .next directory as build context
+            NEXT_BUILD_PATH=.next  # Ensure `.next/` is passed to Docker
 
       - name: Convert image name for Trivy scan
         id: lowercase_image
