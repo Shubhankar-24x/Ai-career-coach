@@ -89,8 +89,9 @@ jobs:
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: nextjs-build
-          path: .next/**  # Upload the .next folder as the build artifact
+          name: nextjs-build  # Artifact name
+          path: .next/  # Correct path to upload
+      
 
   docker:
     name: Docker Build and Push
@@ -105,8 +106,9 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          name: nextjs-build
-          path: .next/  # Download the .next folder as build artifact
+          name: nextjs-build  # Same artifact name
+          path: .next/  # Extract to correct location
+        # Download the .next folder as build artifact
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
