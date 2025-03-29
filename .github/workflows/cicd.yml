@@ -35,7 +35,13 @@ jobs:
       - name: Run ESLint (Static Code Analysis)
         run: npm run lint
 
-     
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v4
+        with:
+          organization: ${{ secrets.SONAR_ORG }}  # Set your SonarCloud organization
+          projectKey: ${{ secrets.SONAR_PROJECT_KEY }}  # Set your SonarCloud project key
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   test:
     name: Unit Testing
@@ -73,6 +79,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Set up environment variables
+        run: echo "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}" >> $GITHUB_ENV
 
       - name: Build project
         run: npm run build
