@@ -21,7 +21,8 @@ env:
 jobs:
   sonarqube:
     name: SonarCloud Code and Static Analysis
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
         with:
@@ -49,7 +50,8 @@ jobs:
 
   test:
     name: Unit Testing
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [sonarqube]
     steps:
       - name: Checkout code
@@ -69,7 +71,8 @@ jobs:
 
   build:
     name: Build Project
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [test]
     steps:
       - name: Checkout code
@@ -106,7 +109,8 @@ jobs:
 
   docker:
     name: Docker Build and Push
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [build]
     outputs:
       image_tag: ${{ steps.set_output.outputs.image_tag }}
@@ -179,7 +183,8 @@ jobs:
 
   update-k8s:
     name: Update Kubernetes Deployment
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [docker]
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     steps:
@@ -210,7 +215,8 @@ jobs:
 
   cleanup:
     name: Cleanup Workspace
-    runs-on: ubuntu-latest
+    # runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: [update-k8s]
     if: always()
     steps:
