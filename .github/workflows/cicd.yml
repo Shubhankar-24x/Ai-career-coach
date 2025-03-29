@@ -83,14 +83,18 @@ jobs:
       - name: Set up environment variables
         run: echo "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${{ secrets.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY }}" >> $GITHUB_ENV
 
+      - name: Clear Next.js Cache
+        run: rm -rf .next/cache
+
       - name: Build project
-        run: npm run build -- --no-cache
+        run: npm run build
+
 
       - name: Debug - List .next directory
         run: ls -R .next/
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v4.6.2
         with:
           name: nextjs-build
           path: .next/**/*
@@ -107,7 +111,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Download build artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v4.2.1
         with:
           name: nextjs-build
           path: .next/
