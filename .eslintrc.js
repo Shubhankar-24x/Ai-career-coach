@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+
 // import { dirname } from "path";
 // import { fileURLToPath } from "url";
 // import { FlatCompat } from "@eslint/eslintrc";
@@ -15,8 +15,7 @@
 // export default eslintConfig;
 
 
-=======
->>>>>>> bdb220334cea49b2287ae60a20db4415513facce
+
 module.exports = {
   root: true,
   extends: ["next/core-web-vitals"],
@@ -24,7 +23,7 @@ module.exports = {
     "react-hooks/exhaustive-deps": "off",
     "react/no-unescaped-entities": "off",
   },
-<<<<<<< HEAD
+
 };
 =======
 };
