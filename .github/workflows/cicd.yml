@@ -116,6 +116,10 @@ jobs:
       - name: Install Trivy
         run: |
           sudo apt-get update
+          sudo apt-get install -y wget gnupg
+          wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/trivy-keyring.gpg] https://aquasecurity.github.io/trivy-repo/deb noble main" | sudo tee /etc/apt/sources.list.d/trivy.list
+          sudo apt-get update
           sudo apt-get install -y trivy
 
       - name: Run Trivy Filesystem Scan
