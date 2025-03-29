@@ -110,19 +110,12 @@ jobs:
   docker:
     name: Docker Build and Push
     runs-on: ubuntu-latest
-    # runs-on: self-hosted
     needs: [build]
     outputs:
       image_tag: ${{ steps.set_output.outputs.image_tag }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4.2.1
-        with:
-          name: nextjs-build
-          path: .next
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -143,23 +136,27 @@ jobs:
             type=ref,event=branch
             latest
 
-      - name: Build Docker image
-        uses: docker/build-push-action@v5
+      - name: Run Trivy File System Scan
+        uses: aquasecurity/trivy-action@master
         with:
-          context: .
-          dockerfile: Dockerfile
-          push: false
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          load: true
-          build-args: |
-            NEXT_BUILD_PATH=.next
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          exit-code: '1'
+          ignore-unfixed: true
+          vuln-type: 'os,library'
+          severity: 'CRITICAL,HIGH'
+
+      - name: Explicit Docker Build Command
+        run: |
+          docker build -t ${{ env.IMAGE_NAME }}:sha-${{ github.sha }} \
+            --build-arg NEXT_BUILD_PATH=.next .
 
       - name: Convert image name for Trivy scan
         id: lowercase_image
         run: echo "LOWER_IMAGE_NAME=${{ env.IMAGE_NAME }}:sha-${{ github.sha }}" | tr '[:upper:]' '[:lower:]' >> $GITHUB_ENV
 
-      - name: Run Trivy vulnerability scanner
+      - name: Run Trivy Image Scan
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: ${{ env.LOWER_IMAGE_NAME }}
@@ -170,16 +167,13 @@ jobs:
           severity: 'CRITICAL,HIGH'
 
       - name: Push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+        run: |
+          docker push ${{ env.IMAGE_NAME }}:sha-${{ github.sha }}
 
       - name: Set image tag output
         id: set_output
         run: echo "image_tag=sha-${{ github.sha }}" >> $GITHUB_OUTPUT
+
 
   update-k8s:
     name: Update Kubernetes Deployment
