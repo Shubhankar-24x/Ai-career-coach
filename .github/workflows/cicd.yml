@@ -35,7 +35,13 @@ jobs:
       - name: Run ESLint (Static Code Analysis)
         run: npm run lint
 
-     
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v1
+        with:
+          organization: ${{ secrets.SONAR_ORG }}  # Set your SonarCloud organization
+          projectKey: ${{ secrets.SONAR_PROJECT_KEY }}  # Set your SonarCloud project key
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   test:
     name: Unit Testing
@@ -85,7 +91,6 @@ jobs:
         with:
           name: build-artifacts
           path: dist/
-
 
   docker:
     name: Docker Build and Push
