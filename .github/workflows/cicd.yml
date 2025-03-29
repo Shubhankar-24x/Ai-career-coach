@@ -90,7 +90,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: nextjs-build
-          path: .next/  # Upload the .next folder as the build artifact
+          path: .next/**  # Upload the .next folder as the build artifact
 
   docker:
     name: Docker Build and Push
