@@ -1,20 +1,13 @@
 import { getIndustryInsights } from "@/actions/dashboard";
-import DashboardView from "./_components/dashboard-view";
+import DashboardView from "./_component/dashboard-view";
 import { getUserOnboardingStatus } from "@/actions/user";
 import { redirect } from "next/navigation";
 
 export default async function DashboardPage() {
-  let isOnboarded = false; // Default to false in case of an error
+  const { isOnboarded } = await getUserOnboardingStatus();
 
-  try {
-    const status = await getUserOnboardingStatus();
-    isOnboarded = status?.isOnboarded || false;
-  } catch (error) {
-    console.error("Error fetching onboarding status:", error.message);
-    // Optional: Handle errors differently (e.g., redirect to login)
-  }
-
-  // Redirect if the user is not onboarded
+  // If not onboarded, redirect to onboarding page
+  // Skip this check if already on the onboarding page
   if (!isOnboarded) {
     redirect("/onboarding");
   }

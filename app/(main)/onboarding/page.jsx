@@ -1,18 +1,11 @@
-import { redirect } from "next/navigation"; 
-import { getUserOnboardingStatus } from "@/actions/user";
+import { redirect } from "next/navigation";
 import { industries } from "@/data/industries";
 import OnboardingForm from "./_components/onboarding-form";
+import { getUserOnboardingStatus } from "@/actions/user";
 
-const OnboardingPage = async () => {
-  let isOnboarded = false;
-
-  try {
-    const status = await getUserOnboardingStatus();
-    isOnboarded = status?.isOnboarded || false;
-  } catch (error) {
-    console.error("Error fetching onboarding status:", error.message);
-    isOnboarded = false; // Fallback to false if there's an error
-  }
+export default async function OnboardingPage() {
+  // Check if user is already onboarded
+  const { isOnboarded } = await getUserOnboardingStatus();
 
   if (isOnboarded) {
     redirect("/dashboard");
@@ -23,6 +16,4 @@ const OnboardingPage = async () => {
       <OnboardingForm industries={industries} />
     </main>
   );
-};
-
-export default OnboardingPage;
+}
