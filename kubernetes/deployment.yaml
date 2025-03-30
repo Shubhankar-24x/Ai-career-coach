@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
       - name: carrer-coach-frontend
-        image: shubhankar24/Shubhankar-24x/Ai-career-coach:sha-10e28a463c62ee4ed4f0788b2c8dec41baa17d2d
+        image: shubhankar24/ai-career-coach:sha-47024346ae4598f62c53ba27c565c07ddd481a60
         resources:      # Resource Quotas for limitation of CPU and Memory Usage
           requests:
             memory: "128Mi"
