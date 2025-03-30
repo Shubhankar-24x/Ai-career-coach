@@ -1,12 +1,11 @@
 # Namespace: career-coach
-kind: Namespace
 apiVersion: v1
+kind: Namespace
 metadata:
   name: career-coach
 
 ---
 # Secrets
-
 apiVersion: v1
 kind: Secret
 metadata:
@@ -18,8 +17,6 @@ data:
   CLERK_SECRET_KEY: c2tfdGVzdF9lOUllY1ZlNzFrV0V0ZFQ5cm1mVXV3TVU3bmdGSWY4YnBTZDhDbE52N2I=
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: cGtfdGVzdF9hVzUwWlc1elpTMXRhVzVyTFRRMExtTnNaWEpyTG1GalkyOTFiblJ6TG1SbGRpUQ==
   GEMINI_API_KEY: QUl6YVN5RFUxajluX19UbnFBZV8ybEdJRXBVbnp2SHBjVnhUSWZZ
-
-
 
 ---
 apiVersion: apps/v1
@@ -53,26 +50,24 @@ spec:
         env:
           - name: DATABASE_URL
             valueFrom:
-            secretKeyRef:
-              name: career-coach-secret
-              key: DATABASE_URL
+              secretKeyRef:
+                name: career-coach-secret
+                key: DATABASE_URL
 
           - name: CLERK_SECRET_KEY
             valueFrom:
-            secretKeyRef:
-              name: career-coach-secret
-              key: CLERK_SECRET_KEY
+              secretKeyRef:
+                name: career-coach-secret
+                key: CLERK_SECRET_KEY
 
           - name: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
             valueFrom:
-            secretKeyRef:
-              name: career-coach-secret
-              key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+              secretKeyRef:
+                name: career-coach-secret
+                key: NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 
           - name: GEMINI_API_KEY
             valueFrom:
-            secretKeyRef:
-              name: career-coach-secret
-              key: GEMINI_API_KEY
-          
-
+              secretKeyRef:
+                name: career-coach-secret
+                key: GEMINI_API_KEY
