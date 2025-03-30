@@ -5,6 +5,23 @@ metadata:
   name: career-coach
 
 ---
+# Secrets
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: career-coach-secret
+  namespace: career-coach
+type: Opaque
+data:
+  DATABASE_URL: cG9zdGdyZXNxbDovL01hdmVyaWNrJTIwQ29kZXJzOm5wZ19telRQeW5LWk1yNjBAZXAtcXVpZXQtcGluZS1hODg2eWxiZy1wb29sZXIuZWFzdHVzMi5henVyZS5uZW9uLnRlY2gvc2Vuc2FpP3NzbG1vZGU9cmVxdWlyZQ==
+  CLERK_SECRET_KEY: c2tfdGVzdF9lOUllY1ZlNzFrV0V0ZFQ5cm1mVXV3TVU3bmdGSWY4YnBTZDhDbE52N2I=
+  NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: cGtfdGVzdF9hVzUwWlc1elpTMXRhVzVyTFRRMExtTnNaWEpyTG1GalkyOTFiblJ6TG1SbGRpUQ==
+  GEMINI_API_KEY: QUl6YVN5RFUxajluX19UbnFBZV8ybEdJRXBVbnp2SHBjVnhUSWZZ
+
+
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -24,13 +41,13 @@ spec:
       containers:
       - name: career-coach-frontend
         image: shubhankar24/ai-career-coach:sha-903183bdb90d4fc88b3587ca8c68f9e8686026ce
-        # resources:      # Resource Quotas for limitation of CPU and Memory Usage
-        #   requests:
-        #     memory: "128Mi"
-        #     cpu: "100m"
-        #   limits:
-        #     memory: "256Mi"
-        #     cpu: "200m"
+        resources:      # Resource Quotas for limitation of CPU and Memory Usage
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "200m"
         ports:
         - containerPort: 3000
         env:
