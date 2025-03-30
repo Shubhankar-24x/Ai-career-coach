@@ -35,6 +35,7 @@ spec:
       labels:
         app: career-coach
     spec:
+      serviceAccountName: career-coach-sa
       containers:
       - name: career-coach-frontend
         image: shubhankar24/ai-career-coach:sha-903183bdb90d4fc88b3587ca8c68f9e8686026ce
