@@ -199,7 +199,8 @@ jobs:
         env:
           IMAGE_TAG: sha-${{ github.sha }}
         run: |
-          NEW_IMAGE="${{ env.IMAGE_NAME }}:${IMAGE_TAG}"
+          NEW_IMAGE="${{ secrets.DOCKER_USERNAME }}/ai-career-coach:${IMAGE_TAG}"
+          #NEW_IMAGE="${{ env.IMAGE_NAME }}:${IMAGE_TAG}" This will update the image with github username
           sed -i "s|image: .*|image: ${NEW_IMAGE}|g" kubernetes/deployment.yaml
           echo "Updated deployment to use image: ${NEW_IMAGE}"
           grep -A 1 "image:" kubernetes/deployment.yaml
