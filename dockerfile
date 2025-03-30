@@ -4,7 +4,7 @@ FROM node:18 AS build
 WORKDIR /app
 
 # Install OpenSSL for Prisma
-RUN apk add --no-cache openssl
+RUN apt-get update && apt-get install -y openssl
 
 # Copy package files and install dependencies
 COPY package*.json ./
@@ -32,8 +32,9 @@ FROM node:18-slim
 
 WORKDIR /app
 
+
 # Install OpenSSL for Prisma compatibility
-RUN apk add --no-cache openssl
+RUN apt-get update && apt-get install -y openssl
 
 # Copy built app from build stage
 COPY --from=build /app .
