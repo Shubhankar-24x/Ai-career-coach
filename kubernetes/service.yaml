@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: carrer-coach-frontend-service
+  name: career-coach-service
   namespace: career-coach
 spec:
   selector:

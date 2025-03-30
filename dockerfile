@@ -3,6 +3,9 @@ FROM node:18 AS build
 
 WORKDIR /app
 
+# Install OpenSSL for Prisma
+RUN apk add --no-cache openssl
+
 # Copy package files and install dependencies
 COPY package*.json ./
 RUN npm install
@@ -28,6 +31,9 @@ RUN npm run build
 FROM node:18-slim
 
 WORKDIR /app
+
+# Install OpenSSL for Prisma compatibility
+RUN apk add --no-cache openssl
 
 # Copy built app from build stage
 COPY --from=build /app .
