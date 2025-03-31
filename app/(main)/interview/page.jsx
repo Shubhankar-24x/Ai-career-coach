@@ -1,7 +1,7 @@
 import { getAssessments } from "@/actions/interview";
-import PerformanceChart from "./components/performance-chart";
-import QuizList from "./components/quiz-list";
-import StatsCards from "./components/stats-cards";
+import QuizList from "./_components/quiz-list";
+import PerformanceChart from "./_components/performance-chart";
+import StatsCards from "./_components/stats-cards";
 
 
 export default async function InterviewPrepPage() {

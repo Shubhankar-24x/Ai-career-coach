@@ -1,39 +1,29 @@
-// const CoverLetter = async({params}) => {
-//     const id = await params.id ;
-//     return <div>
-//     CoverLetter :{id}
-//    </div>
-    
-//   };
-  
-//   export default CoverLetter;
-  
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { getCoverLetter } from "@/actions/cover-letter";
+import CoverLetterPreview from "../_components/cover-letter-preview";
 
-const CoverLetter = async ({ params }) => {
-    // Convert params to a resolved Promise (this prevents Next.js errors)
-    const { id } = await Promise.resolve(params);
+export default async function EditCoverLetterPage({ params }) {
+  const { id } = await params;
+  const coverLetter = await getCoverLetter(id);
 
-    if (!id) {
-        return <div>Error: Invalid Cover Letter ID</div>;
-    }
+  return (
+    <div className="container mx-auto py-6">
+      <div className="flex flex-col space-y-2">
+        <Link href="/ai-cover-letter">
+          <Button variant="link" className="gap-2 pl-0">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Cover Letters
+          </Button>
+        </Link>
 
-    // Fetch cover letter using Prisma function
-    const coverLetter = await getCoverLetter(id);
+        <h1 className="text-6xl font-bold gradient-title mb-6">
+          {coverLetter?.jobTitle} at {coverLetter?.companyName}
+        </h1>
+      </div>
 
-    if (!coverLetter) {
-        return <div>Error: Cover Letter not found</div>;
-    }
-
-    return (
-        <div>
-            <h1>Cover Letter for {coverLetter.jobTitle} at {coverLetter.companyName}</h1>
-            <p><strong>Job Description:</strong> {coverLetter.jobDescription}</p>
-            <hr />
-            <pre>{coverLetter.content}</pre>
-        </div>
-    );
-};
-
-export default CoverLetter;
-
+      <CoverLetterPreview content={coverLetter?.content} />
+    </div>
+  );
+}
