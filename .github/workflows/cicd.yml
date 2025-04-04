@@ -222,3 +222,4 @@ jobs:
         run: |
           echo "Cleaning up workspace..."
           rm -rf ${{ github.workspace }}
+          echo "Workspace cleaned up."
