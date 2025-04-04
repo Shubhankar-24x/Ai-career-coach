@@ -4,7 +4,8 @@ FROM node:18 AS build
 WORKDIR /app
 
 # Install OpenSSL for Prisma
-RUN apt-get update && apt-get install -y openssl
+RUN apt-get update && apt-get clean && apt-get install -y openssl
+
 
 # Copy package files and install dependencies
 COPY package*.json ./
@@ -34,7 +35,8 @@ WORKDIR /app
 
 
 # Install OpenSSL for Prisma compatibility
-RUN apt-get update && apt-get install -y openssl
+RUN apt-get update && apt-get clean && apt-get install -y openssl
+
 
 # Copy built app from build stage
 COPY --from=build /app .
