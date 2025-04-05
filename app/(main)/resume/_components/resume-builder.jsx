@@ -23,7 +23,11 @@ import useFetch from "@/hooks/use-fetch";
 import { useUser } from "@clerk/nextjs";
 import { entriesToMarkdown } from "@/app/lib/helper";
 import { resumeSchema } from "@/app/lib/schema";
+<<<<<<< HEAD
 
+=======
+import html2pdf from "html2pdf.js";
+>>>>>>> fdba19df61b518b7d578df42e9e7d93e7a9542f1
 
 export default function ResumeBuilder({ initialContent }) {
   const [activeTab, setActiveTab] = useState("edit");

@@ -1,13 +1,13 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: carrer-coach-hpa
+  name: career-coach-hpa
   namespace: career-coach
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: carrer-coach-frontend-deployment
+    name: career-coach-deployment
   minReplicas: 1
   maxReplicas: 3
   metrics:
