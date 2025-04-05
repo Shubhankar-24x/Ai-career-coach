@@ -177,12 +177,12 @@ jobs:
               id: set_output
               run: echo "image_tag=sha-${{ github.sha }}" >> $GITHUB_OUTPUT
       
-update-k8s:
-  name: Update Kubernetes Deployment
-  runs-on: ubuntu-latest
-  needs: [docker]
-  if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-  steps:
+  update-k8s:
+    name: Update Kubernetes Deployment
+    runs-on: ubuntu-latest
+    needs: [docker]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
     - name: Checkout code
       uses: actions/checkout@v4
       with:
@@ -196,7 +196,7 @@ update-k8s:
     - name: Print image tag
       env:
         IMAGE_TAG: sha-${{ github.sha }}
-      run: echo "Using image tag: ${IMAGE_TAG}"
+      run: "echo Using image tag: ${IMAGE_TAG}"
 
     - name: Update Kubernetes deployment file with new image
       env:
