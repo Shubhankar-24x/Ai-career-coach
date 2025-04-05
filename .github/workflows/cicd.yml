@@ -185,11 +185,7 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
 
-      - name: Print image tag
-        env:
-          IMAGE_TAG: sha-${{ github.sha }}
-        run: echo "Using image tag: ${IMAGE_TAG}"
-
+      
       - name: Update Kubernetes deployment file with new image
         env:
           IMAGE_TAG: sha-${{ github.sha }}
