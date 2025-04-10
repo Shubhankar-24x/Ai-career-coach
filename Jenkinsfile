@@ -1,8 +1,6 @@
-@Library('Shared') _
-
 pipeline{
 
-    agent any
+    agent tyson
 
     environment{
         SONAR_HOME= tool "Sonar"
@@ -19,8 +17,6 @@ pipeline{
 
     stages{
 
-       
-
         stage("Workspace Cleanup"){
             steps{
                 script{
@@ -35,25 +31,29 @@ pipeline{
         stage("Git: Clone"){
             steps{
                 script{
-                    clone("https://github.com/Shubhankar-24x/Ai-career-coach.git", "main")
+                    git{url: "https://github.com/Shubhankar-24x/Ai-career-coach.git", 
+                        branch: "main"}
                 }
 
             }
         }
-
+        stage('OWASP Dependency-Check Vulnerabilities') {
+            steps {
+                dependencyCheck additionalArguments: ''' 
+                            -o './'
+                            -s './'
+                            -f 'ALL' 
+                            --prettyPrint''', odcInstallation: 'OWASP Dependency-Check Vulnerabilities'
         
+                dependencyCheckPublisher pattern: 'dependency-check-report.xml'
+             }
+         }
+
         stage("Trivy: Filesystem Scanning"){
             steps{
                 script{
-                    trivy_scan()
-                }
-            }
-        }
-
-        stage("OWASP: Dependency Check"){
-            steps{
-                script{
-                    owasp_dependency_check()
+                    echo "Scanning the Filesystem for Vulnerabilities"
+                    sh "trivy fs ."
                 }
             }
         }
@@ -65,11 +65,19 @@ pipeline{
                 }
             }
         }
-
-        stage("SonarQube: Code Quality Gates"){
-            steps{
-                script{
-                    sonarqube_code_quality()
+        stage("SonarQube Quality Gate Check") {
+            steps {
+                script {
+                def qualityGate = waitForQualityGate()
+                    
+                    if (qualityGate.status != 'OK') {
+                        echo "${qualityGate.status}"
+                        error "Quality Gate failed: ${qualityGateStatus}"
+                    }
+                    else {
+                        echo "${qualityGate.status}"
+                        echo "SonarQube Quality Gates Passed"
+                    }
                 }
             }
         }
@@ -80,17 +88,41 @@ pipeline{
         stage("Docker: Build Images"){
             steps{
                 script{
-                    docker_build("career-coach-test", "${params.FRONTEND_DOCKER_TAG}", "shubhankar24")
+                    sh "docker build -t ${DockerHubUser}/${ProjectName}:${ImageTag} ."
+                   // docker_build("career-coach-test", "${params.FRONTEND_DOCKER_TAG}", "shubhankar24")
 
                    // docker_build("career-coach-test", "${params.BACKEND_DOCKER_TAG}", "shubhankar24")
                 }
             }
         }
 
+        stage("Trivy Image Scanning"){
+            steps{
+                script{
+                    echo "Scanning the Docker Image for Vulnerabilities"
+                    sh "trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 ${DockerHubUser}/${ProjectName}:${ImageTag}"
+                }
+            }
+            
+        }
+
+        stage{
+            steps{
+                script{
+                    echo "Docker Login"
+                    sh "docker login -u ${DockerHubUser} -p ${DockerHubPassword}"
+                    echo "Docker Login Successful"
+                }
+            }
+        }
+
+
         stage("Docker: Image Push to DockerHub"){
             steps{
                 script{
-                    docker_push()
+                    echo "Pushing Docker Image to DockerHub"
+                    sh "docker push ${DockerHubUser}/${ProjectName}:${ImageTag}"
+                    echo "Docker Image Pushed to DockerHub Successfully"
                 }
             }
         }
