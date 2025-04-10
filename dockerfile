@@ -1,5 +1,5 @@
 # Build stage
-FROM node:20 AS build
+FROM node:18 AS build
 
 WORKDIR /app
 
@@ -30,7 +30,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # Lighter runtime image
-FROM node:20-slim
+FROM node:18-slim
 
 WORKDIR /app
 
