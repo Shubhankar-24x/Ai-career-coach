@@ -1,6 +1,7 @@
 pipeline{
 
-    agent tyson
+   // agent any
+    agent { label 'tyson' }
 
     environment{
         SONAR_HOME= tool "Sonar"
