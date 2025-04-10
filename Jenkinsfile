@@ -4,7 +4,7 @@ pipeline{
     agent { label 'tyson' }
 
     environment{
-        SONAR_HOME= tool "Sonar"
+        SONAR_HOME= tool "SonarQube"
     }
 
     // Building with Parameters
@@ -38,17 +38,22 @@ pipeline{
 
             }
         }
-        stage('OWASP Dependency-Check Vulnerabilities') {
+       stage('OWASP Dependency-Check Vulnerabilities') {
             steps {
-                dependencyCheck additionalArguments: ''' 
-                            -o './'
-                            -s './'
-                            -f 'ALL' 
-                            --prettyPrint''', odcInstallation: 'OWASP Dependency-Check Vulnerabilities'
-        
-                dependencyCheckPublisher pattern: 'dependency-check-report.xml'
-             }
-         }
+                dependencyCheck(
+                additionalArguments: '''
+                -o ./ 
+                -s ./ 
+                -f ALL 
+                --prettyPrint
+            ''',
+            odcInstallation: 'OWASP Dependency-Check Vulnerabilities'
+            )
+
+            dependencyCheckPublisher(pattern: 'dependency-check-report.xml')
+        }
+    }
+
 
         stage("Trivy: Filesystem Scanning"){
             steps{
