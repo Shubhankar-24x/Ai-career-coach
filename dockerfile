@@ -1,5 +1,5 @@
 # Build stage
-FROM node:18 AS build
+FROM node:20 AS build
 
 WORKDIR /app
 
@@ -9,8 +9,8 @@ RUN apt-get update && apt-get clean && apt-get install -y openssl
 
 # Copy package files and install dependencies
 COPY package*.json ./
-RUN rm -rf node_modules package-lock.json && npm install
-
+# RUN rm -rf node_modules package-lock.json && npm install
+RUN npm install
 
 # Copy all files
 COPY . .
@@ -30,7 +30,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # Lighter runtime image
-FROM node:18-slim
+FROM node:20-slim
 
 WORKDIR /app
 

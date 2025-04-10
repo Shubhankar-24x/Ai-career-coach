@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         SONAR_HOME = tool 'Sonar'
-        nodejs "NodeJS_18"
         DockerHubUser = 'shubhankar24'
         ProjectName = 'career-coach'
         ImageTag = "${params.FRONTEND_DOCKER_TAG}"
@@ -11,7 +10,7 @@ pipeline {
     }
 
     parameters {
-        string(name: 'FRONTEND_DOCKER_TAG', defaultValue: '', description: 'Docker image tag for frontend')
+        string(name: 'FRONTEND_DOCKER_TAG', defaultValue: 'v0.1', description: 'Docker image tag for frontend')
     }
 
     stages {
@@ -77,11 +76,24 @@ pipeline {
         }
 
         stage("Docker: Build Images") {
+            environment {
+                NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = credentials('clerk-publishable-key')
+                CLERK_SECRET_KEY = credentials('clerk-secret-key')
+                DATABASE_URL = credentials('database-url')
+                GEMINI_API_KEY = credentials('gemini-api-key')
+        }
             steps {
                 echo "Building Docker Image: ${DockerHubUser}/${ProjectName}:${ImageTag}"
-                sh "docker build -t ${DockerHubUser}/${ProjectName}:${ImageTag} ."
+                sh """
+                    docker build -t ${DockerHubUser}/${ProjectName}:${ImageTag} \
+                    --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY} \
+                    --build-arg CLERK_SECRET_KEY=${CLERK_SECRET_KEY} \
+                    --build-arg DATABASE_URL=${DATABASE_URL} \
+                    --build-arg GEMINI_API_KEY=${GEMINI_API_KEY} .
+                """
             }
         }
+
 
         stage("Trivy Image Scanning") {
             steps {
