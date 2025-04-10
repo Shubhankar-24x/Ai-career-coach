@@ -1,14 +1,14 @@
 name: CI/CD Pipeline
 
 on:
-  push:
-    branches: [main]
-    paths-ignore:
-      - 'k8s/deployment.yaml'
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, reopened]
- # workflow_dispatch:
+  # push:
+  #   branches: [main]
+  #   paths-ignore:
+  #     - 'k8s/deployment.yaml'
+  # pull_request:
+  #   branches: [main]
+  #   types: [opened, synchronize, reopened]
+  workflow_dispatch:
 
 env:
   REGISTRY: docker.io
