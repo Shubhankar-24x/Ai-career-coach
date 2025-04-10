@@ -59,32 +59,22 @@ pipeline{
             }
         }
 
-        stage("SonarQube: Code Analysis"){
-            steps{
-                script{
-                    sonarqube_analysis("Sonar","career-coach","career-coach")
-                }
-            }
-        }
-        stage("SonarQube Quality Gate Check") {
+        stage('SonarQube: Code Analysis') {
             steps {
-                script {
-                def qualityGate = waitForQualityGate()
-                    
-                    if (qualityGate.status != 'OK') {
-                        echo "${qualityGate.status}"
-                        error "Quality Gate failed: ${qualityGateStatus}"
-                    }
-                    else {
-                        echo "${qualityGate.status}"
-                        echo "SonarQube Quality Gates Passed"
-                    }
+                withSonarQubeEnv('SonarQube') {
+                sh 'sonar-scanner'
                 }
             }
         }
 
+        stage('SonarQube: Quality Gate Check') {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                waitForQualityGate abortPipeline: true
+                }
+            }
+        }
 
-     
 
         stage("Docker: Build Images"){
             steps{
