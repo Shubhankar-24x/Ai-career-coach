@@ -29,6 +29,17 @@ pipeline {
             }
         }
 
+        stage("NodeJS: Installing ") {
+            steps {
+                sh '''
+                    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+                    sudo apt-get install -y nodejs
+                    node -v
+                    npm -v'''
+
+            }
+        }
+
         stage('OWASP Dependency-Check Vulnerabilities') {
             steps {
 
