@@ -67,10 +67,17 @@ pipeline{
         stage('SonarQube: Code Analysis') {
             steps {
                 withSonarQubeEnv('SonarQube') {
-                sh 'sonar-scanner'
+                sh """
+                    sonar-scanner \
+                    -Dsonar.projectKey=Career-Coach \
+                    -Dsonar.projectName=Career-Coach \
+                    -Dsonar.sources=. \
+                    -Dsonar.verbose=true
+                """
                 }
             }
         }
+
 
         stage('SonarQube: Quality Gate Check') {
             steps {
