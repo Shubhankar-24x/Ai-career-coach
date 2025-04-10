@@ -10,7 +10,7 @@ pipeline {
     }
 
     parameters {
-        string(name: 'FRONTEND_DOCKER_TAG', defaultValue: 'v0.1', description: 'Docker image tag for frontend')
+        string(name: 'FRONTEND_DOCKER_TAG', defaultValue: '', description: 'Docker image tag for frontend')
     }
 
     stages {
