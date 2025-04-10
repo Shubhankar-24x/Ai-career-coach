@@ -51,9 +51,7 @@ pipeline {
                     sh """
                         $SONAR_HOME/bin/sonar-scanner \
                         -Dsonar.projectKey=Career-Coach \
-                        -Dsonar.projectName=Career-Coach \
-                        -Dsonar.sources=. \
-                        -Dsonar.verbose=true
+                        -Dsonar.projectName=Career-Coach 
                     """
                 }
             }
