@@ -19,6 +19,20 @@ import {
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 
+// ✅ Moved CustomTooltip outside the component to avoid recreating it on each render
+function CustomTooltip({ active, payload }) {
+  if (active && payload?.length) {
+    const { value, payload: item } = payload[0];
+    return (
+      <div className="bg-background border rounded-lg p-2 shadow-md">
+        <p className="text-sm font-medium">Score: {value}%</p>
+        <p className="text-xs text-muted-foreground">{item.date}</p>
+      </div>
+    );
+  }
+  return null;
+}
+
 export default function PerformanceChart({ assessments }) {
   const [chartData, setChartData] = useState([]);
 
@@ -47,23 +61,7 @@ export default function PerformanceChart({ assessments }) {
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="date" />
               <YAxis domain={[0, 100]} />
-              <Tooltip
-                content={({ active, payload }) => {
-                  if (active && payload?.length) {
-                    return (
-                      <div className="bg-background border rounded-lg p-2 shadow-md">
-                        <p className="text-sm font-medium">
-                          Score: {payload[0].value}%
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {payload[0].payload.date}
-                        </p>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
+              <Tooltip content={<CustomTooltip />} />
               <Line
                 type="monotone"
                 dataKey="score"

@@ -22,7 +22,7 @@ pipeline {
 
         stage("Git: Clone") {
             steps {
-                git url: 'https://github.com/Shubhankar-24x/Ai-career-coach.git', branch: 'main'
+                git url: 'https://github.com/Shubhankar-24x/Ai-career-coach.git', branch: 'dev'
             }
         }
 
