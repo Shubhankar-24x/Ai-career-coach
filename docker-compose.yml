@@ -1,18 +1,41 @@
-version: "3.8"
+version: '3.9'
 
 services:
-  frontend:
-    build:
-      context: .
+  app:
+    image: shubhankar24/career-coach:latest
+    container_name: career-coach-app
     ports:
       - "3000:3000"
+    env_file:
+      - .env
+    restart: unless-stopped
+    depends_on:
+      - db
+    labels:
+      - "com.centurylinklabs.watchtower.enable=true"
+
+  db:
+    image: postgres:15
+    container_name: career-coach-db
     environment:
-      - NODE_ENV=production
-    networks:
-      - career-coach
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: sensai
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
+  watchtower:
+    image: containrrr/watchtower
+    container_name: watchtower
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      WATCHTOWER_POLL_INTERVAL: 30
+      WATCHTOWER_CLEANUP: "true"
+    restart: unless-stopped
 
-
-networks:
-  career-coach:
+volumes:
+  postgres_data:
