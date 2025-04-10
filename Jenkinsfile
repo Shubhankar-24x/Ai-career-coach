@@ -3,9 +3,9 @@ pipeline {
 
     environment {
         SONAR_HOME = tool 'Sonar'
-        //DockerHubUser = 'shubhankar24'
+        DockerHubUser = 'shubhankar24'
         ProjectName = 'career-coach'
-        //ImageTag = "${params.FRONTEND_DOCKER_TAG}"
+        ImageTag = "${params.FRONTEND_DOCKER_TAG}"
         //DockerHubPassword = credentials('dockerhub-password-id') // Set this ID in Jenkins Credentials
     }
 
@@ -30,11 +30,10 @@ pipeline {
 
         stage('OWASP Dependency-Check Vulnerabilities') {
             steps {
-                dependencyCheck(
-                    additionalArguments: "-o ./ -s ./ -f ALL --prettyPrint",
-                    odcInstallation: 'OWASP Dependency-Check Vulnerabilities'
-                )
-                dependencyCheckPublisher(pattern: 'dependency-check-report.xml')
+
+                dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'OWASP Dependency-Check Vulnerabilities'
+                dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+                
             }
         }
 
@@ -82,7 +81,7 @@ pipeline {
         stage("Docker: Login to DockerHub") {
             steps {
                 echo "Docker Login"
-                sh "echo ${DockerHubPassword} | docker login -u ${DockerHubUser} --password-stdin"
+                sh " docker login -u ${DockerHubUser} --password ${DockerHubPassword}"
             }
         }
 
