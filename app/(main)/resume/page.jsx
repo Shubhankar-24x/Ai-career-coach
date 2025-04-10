@@ -1,5 +1,12 @@
+// app/(main)/resume/page.jsx
+
+import dynamic from "next/dynamic";
 import { getResume } from "@/actions/resume";
-import ResumeBuilder from "./_components/resume-builder";
+
+// Load ResumeBuilder on the client side only
+const ResumeBuilder = dynamic(() => import("./_components/resume-builder"), {
+  ssr: false,
+});
 
 export default async function ResumePage() {
   const resume = await getResume();
