@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         SONAR_HOME = tool 'Sonar'
-        nodejs "NodeJS_18"
+        
         DockerHubUser = 'shubhankar24'
         ProjectName = 'career-coach'
         ImageTag = "${params.FRONTEND_DOCKER_TAG}"
