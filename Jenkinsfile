@@ -107,7 +107,7 @@ pipeline{
             
         }
 
-        stage{
+        stage("Docker: Login to DockerHub"){
             steps{
                 script{
                     echo "Docker Login"
