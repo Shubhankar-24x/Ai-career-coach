@@ -70,10 +70,15 @@ pipeline {
         stage('NPM: Build') {
             steps {
                 echo "Running npm install and npm run build"
-                sh '''
-                    npm install
-                    npm run build
-                '''
+                sh """
+                    export NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+                    export CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
+                    export DATABASE_URL=${DATABASE_URL}
+                    export GEMINI_API_KEY=${GEMINI_API_KEY}
+                    npm install && npm run build
+                    
+                """
+
             }
         }
 
