@@ -8,7 +8,7 @@ pipeline {
     }
 
     parameters {
-        string(name: 'FRONTEND_DOCKER_TAG', defaultValue: '', description: 'Docker image tag for frontend')
+        string(name: 'FRONTEND_DOCKER_TAG', defaultValue: 'v1', description: 'Docker image tag for frontend')
         string(name: 'NEXUS_URL', defaultValue: 'https://nexus.example.com', description: 'Nexus repository URL')
         string(name: 'NEXUS_REPOSITORY', defaultValue: 'npm-artifacts', description: 'Nexus repository name')
     }
