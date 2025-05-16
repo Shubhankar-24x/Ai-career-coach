@@ -110,10 +110,10 @@ pipeline {
 
         stage("Docker: Build Images") {
             environment {
-                NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = credentials('clerk-publishable-key')
-                CLERK_SECRET_KEY = credentials('clerk-secret-key')
-                DATABASE_URL = credentials('database-url')
-                GEMINI_API_KEY = credentials('gemini-api-key')
+                NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = credentials('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY')
+                CLERK_SECRET_KEY = credentials('CLERK_SECRET_KEY')
+                DATABASE_URL = credentials('DATABASE_URL')
+                GEMINI_API_KEY = credentials('GEMINI_API_KEY')
             }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-cred', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
