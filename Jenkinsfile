@@ -1,10 +1,14 @@
 pipeline {
-    agent { label 'tyson' }
+    agent any
 
     environment {
         SONAR_HOME = tool 'Sonar'
         ProjectName = 'career-coach'
         ImageTag = "${params.FRONTEND_DOCKER_TAG}"
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = credentials('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY')
+        CLERK_SECRET_KEY = credentials('CLERK_SECRET_KEY')
+        DATABASE_URL = credentials('DATABASE_URL')
+        GEMINI_API_KEY = credentials('GEMINI_API_KEY')
     }
 
     parameters {
@@ -28,16 +32,6 @@ pipeline {
             }
         }
 
-        stage("NodeJS: Installing") {
-            steps {
-                sh '''
-                    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-                    sudo apt-get install -y nodejs
-                    node -v
-                    npm -v
-                '''
-            }
-        }
 
         stage('OWASP Dependency-Check Vulnerabilities') {
             steps {
@@ -109,12 +103,6 @@ pipeline {
         }
 
         stage("Docker: Build Images") {
-            environment {
-                NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = credentials('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY')
-                CLERK_SECRET_KEY = credentials('CLERK_SECRET_KEY')
-                DATABASE_URL = credentials('DATABASE_URL')
-                GEMINI_API_KEY = credentials('GEMINI_API_KEY')
-            }
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-cred', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
                     echo "Building Docker Image: ${dockerHubUser}/${ProjectName}:${ImageTag}"
