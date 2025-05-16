@@ -9,6 +9,8 @@ pipeline {
 
     parameters {
         string(name: 'FRONTEND_DOCKER_TAG', defaultValue: '', description: 'Docker image tag for frontend')
+        string(name: 'NEXUS_URL', defaultValue: 'https://nexus.example.com', description: 'Nexus repository URL')
+        string(name: 'NEXUS_REPOSITORY', defaultValue: 'npm-artifacts', description: 'Nexus repository name')
     }
 
     stages {
@@ -92,8 +94,8 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
                     script {
-                        def nexusUrl = 'https://nexus.example.com'  // replace with your Nexus URL
-                        def repository = 'npm-artifacts'             // replace with your repo name
+                        def nexusUrl = params.NEXUS_URL
+                        def repository = params.NEXUS_REPOSITORY
                         def uploadUrl = "${nexusUrl}/repository/${repository}/${ProjectName}/${ImageTag}/"
 
                         echo "Uploading dist.zip to Nexus at: ${uploadUrl}"
