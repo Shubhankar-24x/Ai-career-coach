@@ -13,9 +13,10 @@ pipeline {
 
     parameters {
         string(name: 'FRONTEND_DOCKER_TAG', defaultValue: 'v1', description: 'Docker image tag for frontend')
-        string(name: 'NEXUS_URL', defaultValue: 'https://nexus.example.com', description: 'Nexus repository URL')
-        string(name: 'NEXUS_REPOSITORY', defaultValue: 'npm-artifacts', description: 'Nexus repository name')
+        string(name: 'NEXUS_URL', defaultValue: 'http://3.142.210.4:8082', description: 'Docker registry URL (not Nexus UI)')
+        string(name: 'NEXUS_REPOSITORY', defaultValue: 'Docker-Image', description: 'Docker repository name (used only for naming)')
     }
+
 
     stages {
 
@@ -67,47 +68,8 @@ pipeline {
             }
         }
 
-        stage('NPM: Build') {
-            steps {
-                echo "Running npm install and npm run build"
-                sh """
-                    export NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-                    export CLERK_SECRET_KEY=${CLERK_SECRET_KEY}
-                    export DATABASE_URL=${DATABASE_URL}
-                    export GEMINI_API_KEY=${GEMINI_API_KEY}
-                    npm install && npm run build
-                    
-                """
 
-            }
-        }
-
-        stage('Package Build Artifact') {
-            steps {
-                echo "Packaging dist directory as dist.zip"
-                sh 'zip -r dist.zip dist/'
-            }
-        }
-
-        stage('Upload Build Artifact to Nexus') {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')]) {
-                    script {
-                        def nexusUrl = params.NEXUS_URL
-                        def repository = params.NEXUS_REPOSITORY
-                        def uploadUrl = "${nexusUrl}/repository/${repository}/${ProjectName}/${ImageTag}/"
-
-                        echo "Uploading dist.zip to Nexus at: ${uploadUrl}"
-
-                        sh """
-                            curl -u ${NEXUS_USER}:${NEXUS_PASS} --upload-file dist.zip ${uploadUrl}dist.zip
-                        """
-                    }
-                }
-            }
-        }
-
-        stage("Docker: Build Images") {
+        stage("Docker: Image Build") {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-cred', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
                     echo "Building Docker Image: ${dockerHubUser}/${ProjectName}:${ImageTag}"
@@ -122,20 +84,42 @@ pipeline {
             }
         }
 
-        stage("Trivy Image Scanning") {
+stage("Push Docker Image to Nexus") {
             steps {
-                script {
-                    def reportDir = "trivy-image-report/${ProjectName}-${ImageTag}"
-                    sh "mkdir -p ${reportDir}"
-                }
-                withCredentials([usernamePassword(credentialsId: 'docker-cred', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
-                    echo "Scanning the Docker Image for Vulnerabilities"
-                    sh "trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 0 ${dockerHubUser}/${ProjectName}:${ImageTag} > trivy-image-report/${ProjectName}-${ImageTag}/trivy-results.txt"
+                withCredentials([
+                    usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'dockerHubUser', passwordVariable: 'dockerHubPass'),
+                    usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')
+                ]) {
+                    script {
+                        def nexusRegistry = params.NEXUS_URL.replaceFirst(/^https?:\/\//, '').replaceAll('/$', '')
+                        def imageName = "${nexusRegistry}/${ProjectName}:${ImageTag}"
+
+                        echo "Tagging Docker image as: ${imageName}"
+
+                        sh """
+                            docker tag ${dockerHubUser}/${ProjectName}:${ImageTag} ${imageName}
+                            echo "\$NEXUS_PASS" | docker login ${nexusRegistry} -u "\$NEXUS_USER" --password-stdin
+                            docker push ${imageName}
+                        """
+                    }
                 }
             }
         }
 
-        stage("Docker: Image Push") {
+        stage("Trivy Image Scanning") {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'dockerHubUser', passwordVariable: 'dockerHubPass')]) {
+                    script {
+                        def reportDir = "trivy-image-report/${ProjectName}-${ImageTag}"
+                        sh "mkdir -p ${reportDir}"
+                        echo "Scanning the Docker Image for Vulnerabilities"
+                        sh "trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 0 ${dockerHubUser}/${ProjectName}:${ImageTag} > ${reportDir}/trivy-results.txt"
+                    }
+                }
+            }
+        }
+
+           stage("Docker: Image Push") {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-cred', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
@@ -150,26 +134,32 @@ pipeline {
         }
 
         stage("Update Kubernetes Manifest") {
-            steps {
-                script {
-                    def newImage = "${dockerHubUser}/${ProjectName}:${ImageTag}"
-                    echo "Updating kubernetes/deployment.yaml with image: ${newImage}"
+    steps {
+        withCredentials([
+            usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'dockerHubUser', passwordVariable: 'dockerHubPass'),
+            usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_TOKEN')
+        ]) {
+            script {
+                def newImage = "${dockerHubUser}/${ProjectName}:${ImageTag}"
+                echo "Updating kubernetes/deployment.yaml with image: ${newImage}"
 
-                    sh """
-                        sed -i "s|^\\(\\s*image:\\s*\\).*|\\1${newImage}|g" kubernetes/deployment.yaml
-                    """
+                sh """
+                    sed -i "s|^\\(\\s*image:\\s*\\).*|\\1${newImage}|g" kubernetes/deployment.yaml
+                """
 
-                    sh """
-                        git config user.name "Jenkins"
-                        git config user.email "jenkins@example.com"
-                        git add kubernetes/deployment.yaml
-                        git diff --cached --quiet || git commit -m "Update Kubernetes deployment with image tag: ${ImageTag} [skip ci]"
-                        git push origin main
-                    """
-                }
+                sh """
+                    git config user.name "Jenkins"
+                    git config user.email "jenkins@example.com"
+                    git add kubernetes/deployment.yaml
+                    git diff --cached --quiet || git commit -m "Update Kubernetes deployment with image tag: ${ImageTag} [skip ci]"
+                    git remote set-url origin https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/Shubhankar-24x/Ai-career-coach.git
+                    git push origin main
+                """
             }
         }
     }
+}
+
 
     post {
         failure {
@@ -180,3 +170,9 @@ pipeline {
         }
     }
 }
+
+     
+
+
+
+    
