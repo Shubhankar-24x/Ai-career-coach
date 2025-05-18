@@ -128,15 +128,34 @@ pipeline {
                         """
 
                         sh """
-                            git config user.name "Jenkins"
-                            git config user.email "jenkins@example.com"
-                            git add kubernetes/deployment.yaml
-                            git diff --cached --quiet || git commit -m "Update Kubernetes deployment with image tag: ${ImageTag} [skip ci]"
-                            git remote set-url origin https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/Shubhankar-24x/Ai-career-coach.git
-                            git config pull.rebase false
-                            git pull origin ${params.GIT_BRANCH}
-                            git push origin ${params.GIT_BRANCH}
-                        """
+    git config user.name "Jenkins"
+    git config user.email "jenkins@example.com"
+
+    # Checkout or create the 'test' branch locally
+    git fetch origin
+    git checkout -B ${params.GIT_BRANCH} origin/${params.GIT_BRANCH}
+
+    # Update the deployment YAML and commit changes
+    git add kubernetes/deployment.yaml
+    git diff --cached --quiet || git commit -m "Update Kubernetes deployment with image tag: ${ImageTag} [skip ci]"
+
+    # Setup remote with credentials securely
+    git remote set-url origin https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/Shubhankar-24x/Ai-career-coach.git
+
+    git config pull.rebase false
+
+    # Pull and resolve merge conflicts automatically in favor of remote
+    git pull --strategy-option theirs origin ${params.GIT_BRANCH} || {
+        echo "❌ Merge conflict. Forcing resolution by taking remote changes."
+        git checkout --theirs kubernetes/deployment.yaml
+        git add kubernetes/deployment.yaml
+        git commit -m "Resolve merge conflict by keeping remote deployment.yaml"
+    }
+
+    # Push changes to the 'test' branch
+    git push origin ${params.GIT_BRANCH}
+"""
+
                     }
                 }
             }
