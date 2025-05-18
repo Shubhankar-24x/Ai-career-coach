@@ -127,44 +127,48 @@ pipeline {
                             sed -i "s|^\\(\\s*image:\\s*\\).*|\\1${newImage}|g" kubernetes/deployment.yaml
                         """
 
-sh """
-    set +e
+set +e
 
-    git config user.name "Jenkins"
-    git config user.email "jenkins@example.com"
+git config user.name "Jenkins"
+git config user.email jenkins@example.com
 
-    # Stage and commit changes first (on current branch)
-    git add kubernetes/deployment.yaml
-    git diff --cached --quiet || git commit -m "Update Kubernetes deployment with image tag: ${ImageTag} [skip ci]"
+git add kubernetes/deployment.yaml
+git diff --cached --quiet || git commit -m "Update Kubernetes deployment with image tag: ${ImageTag} [skip ci]"
 
-    # Save commit hash to re-apply later
-    COMMIT_HASH=\$(git rev-parse HEAD)
+COMMIT_HASH=$(git rev-parse HEAD)
 
-    # Setup remote with credentials
-    git remote set-url origin https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/Shubhankar-24x/Ai-career-coach.git
+git remote set-url origin https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/Shubhankar-24x/Ai-career-coach.git
+git fetch origin
+git checkout -B ${params.GIT_BRANCH} origin/${params.GIT_BRANCH}
 
-    # Fetch latest remote branches
-    git fetch origin
+git cherry-pick $COMMIT_HASH
+CHERRY_PICK_STATUS=$?
 
-    # Create and checkout local '${params.GIT_BRANCH}' branch from remote
-    git checkout -B ${params.GIT_BRANCH} origin/${params.GIT_BRANCH}
-
-    # Cherry-pick previously committed change onto the target branch
-    git cherry-pick \$COMMIT_HASH
-    STATUS=\$?
-
-    if [ \$STATUS -ne 0 ]; then
-        echo "❌ Cherry-pick failed due to conflict. Resolving using remote version."
+if [ $CHERRY_PICK_STATUS -ne 0 ]; then
+    # Check if cherry-pick is empty (no changes to commit)
+    if git status | grep -q "nothing to commit"; then
+        echo "ℹ️ Cherry-pick is empty, skipping it."
+        git cherry-pick --skip
+    else
+        echo "❌ Cherry-pick had a conflict. Resolving using remote version..."
         git checkout --theirs kubernetes/deployment.yaml
         git add kubernetes/deployment.yaml
         git cherry-pick --continue
     fi
+fi
 
-    set -e
+git push origin ${params.GIT_BRANCH}
+FINAL_STATUS=$?
 
-    # Push to '${params.GIT_BRANCH}' branch
-    git push origin ${params.GIT_BRANCH}
-"""
+set -e
+
+if [ $FINAL_STATUS -ne 0 ]; then
+    echo "❌ Git push failed."
+    exit 1
+else
+    echo "✅ Git push succeeded."
+fi
+
 
 
 
