@@ -85,16 +85,8 @@ pipeline {
             }
         }
 
-        stage("Docker: Image Scan") {
-            steps {
-                script {
-                    echo "Scanning the Docker Image for Vulnerabilities"
-                    sh "trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 0 ${dockerHubUser}/${ProjectName}:${ImageTag}"
-                }
-            }
-        }
 
-        stage("Trivy Image Scanning") {
+        stage("Trivy: Image Scanning") {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'dockerHubUser', passwordVariable: 'dockerHubPass')]) {
                     script {
