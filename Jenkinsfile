@@ -127,34 +127,38 @@ pipeline {
                             sed -i "s|^\\(\\s*image:\\s*\\).*|\\1${newImage}|g" kubernetes/deployment.yaml
                         """
 
-                        sh """
+sh """
     git config user.name "Jenkins"
     git config user.email "jenkins@example.com"
 
-    # Checkout or create the 'test' branch locally
-    git fetch origin
-    git checkout -B ${params.GIT_BRANCH} origin/${params.GIT_BRANCH}
-
-    # Update the deployment YAML and commit changes
+    # Stage and commit changes first (on current branch)
     git add kubernetes/deployment.yaml
     git diff --cached --quiet || git commit -m "Update Kubernetes deployment with image tag: ${ImageTag} [skip ci]"
 
-    # Setup remote with credentials securely
+    # Save commit hash to re-apply later
+    COMMIT_HASH=\$(git rev-parse HEAD)
+
+    # Setup remote with credentials
     git remote set-url origin https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/Shubhankar-24x/Ai-career-coach.git
 
-    git config pull.rebase false
+    # Fetch latest remote branches
+    git fetch origin
 
-    # Pull and resolve merge conflicts automatically in favor of remote
-    git pull --strategy-option theirs origin ${params.GIT_BRANCH} || {
-        echo "❌ Merge conflict. Forcing resolution by taking remote changes."
+    # Create and checkout local 'test' branch from remote
+    git checkout -B ${params.GIT_BRANCH} origin/${params.GIT_BRANCH}
+
+    # Cherry-pick previously committed change onto 'test'
+    git cherry-pick \$COMMIT_HASH || {
+        echo "❌ Cherry-pick failed due to conflict. Resolving using remote version."
         git checkout --theirs kubernetes/deployment.yaml
         git add kubernetes/deployment.yaml
-        git commit -m "Resolve merge conflict by keeping remote deployment.yaml"
+        git cherry-pick --continue
     }
 
-    # Push changes to the 'test' branch
+    # Push to 'test' branch
     git push origin ${params.GIT_BRANCH}
 """
+
 
                     }
                 }
