@@ -160,6 +160,9 @@ pipeline {
                     }
                 }
             }
+            
+            }
+    }
 
     post {
         failure {
