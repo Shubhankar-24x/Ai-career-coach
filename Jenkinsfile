@@ -13,8 +13,8 @@ pipeline {
 
     parameters {
         string(name: 'FRONTEND_DOCKER_TAG', defaultValue: 'v1', description: 'Docker image tag for frontend')
-        string(name: 'NEXUS_URL', defaultValue: 'http://3.17.165.120:8082', description: 'Docker registry URL (not Nexus UI)')
-        string(name: 'NEXUS_REPOSITORY', defaultValue: 'Docker-Image', description: 'Docker repository name (used only for naming)')
+       // string(name: 'NEXUS_URL', defaultValue: 'http://3.17.165.120:8082', description: 'Docker registry URL (not Nexus UI)')
+        //string(name: 'NEXUS_REPOSITORY', defaultValue: 'Docker-Image', description: 'Docker repository name (used only for naming)')
         string(name: 'GIT_BRANCH', defaultValue: 'dev', description: 'Git branch to update deployment.yaml')
     }
 
@@ -85,24 +85,11 @@ pipeline {
             }
         }
 
-        stage("Push Docker Image to Nexus") {
+        stage("Docker: Image Scan") {
             steps {
-                withCredentials([
-                    usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'dockerHubUser', passwordVariable: 'dockerHubPass'),
-                    usernamePassword(credentialsId: 'nexus-cred', usernameVariable: 'NEXUS_USER', passwordVariable: 'NEXUS_PASS')
-                ]) {
-                    script {
-                        def nexusRegistry = params.NEXUS_URL.replaceFirst(/^https?:\/\//, '').replaceAll('/$', '')
-                        def imageName = "${nexusRegistry}/${ProjectName}:${ImageTag}"
-
-                        echo "Tagging Docker image as: ${imageName}"
-
-                        sh """
-                            docker tag ${dockerHubUser}/${ProjectName}:${ImageTag} ${imageName}
-                            echo "\$NEXUS_PASS" | docker login ${nexusRegistry} -u "\$NEXUS_USER" --password-stdin
-                            docker push ${imageName}
-                        """
-                    }
+                script {
+                    echo "Scanning the Docker Image for Vulnerabilities"
+                    sh "trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 0 ${dockerHubUser}/${ProjectName}:${ImageTag}"
                 }
             }
         }
