@@ -13,8 +13,9 @@ pipeline {
 
     parameters {
         string(name: 'FRONTEND_DOCKER_TAG', defaultValue: 'v1', description: 'Docker image tag for frontend')
-        string(name: 'NEXUS_URL', defaultValue: 'http://3.142.210.4:8082', description: 'Docker registry URL (not Nexus UI)')
+        string(name: 'NEXUS_URL', defaultValue: 'http://3.17.165.120:8082', description: 'Docker registry URL (not Nexus UI)')
         string(name: 'NEXUS_REPOSITORY', defaultValue: 'Docker-Image', description: 'Docker repository name (used only for naming)')
+        string(name: 'GIT_BRANCH', defaultValue: 'dev', description: 'Git branch to update deployment.yaml')
     }
 
 
@@ -84,7 +85,7 @@ pipeline {
             }
         }
 
-stage("Push Docker Image to Nexus") {
+        stage("Push Docker Image to Nexus") {
             steps {
                 withCredentials([
                     usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'dockerHubUser', passwordVariable: 'dockerHubPass'),
@@ -120,7 +121,7 @@ stage("Push Docker Image to Nexus") {
         }
 
            stage("Docker: Image Push") {
-            steps {
+                steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'docker-cred', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
                         echo "Logging into DockerHub"
@@ -133,33 +134,32 @@ stage("Push Docker Image to Nexus") {
             }
         }
 
-        stage("Update Kubernetes Manifest") {
-    steps {
-        withCredentials([
-            usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'dockerHubUser', passwordVariable: 'dockerHubPass'),
-            usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_TOKEN')
-        ]) {
-            script {
-                def newImage = "${dockerHubUser}/${ProjectName}:${ImageTag}"
-                echo "Updating kubernetes/deployment.yaml with image: ${newImage}"
+            stage("Update Kubernetes Manifest") {
+                steps {
+                withCredentials([
+                    usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'dockerHubUser', passwordVariable: 'dockerHubPass'),
+                    usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_TOKEN')
+                ]) {
+                    script {
+                        def newImage = "${dockerHubUser}/${ProjectName}:${ImageTag}"
+                        echo "Updating kubernetes/deployment.yaml with image: ${newImage}"
 
-                sh """
-                    sed -i "s|^\\(\\s*image:\\s*\\).*|\\1${newImage}|g" kubernetes/deployment.yaml
-                """
+                        sh """
+                            sed -i "s|^\\(\\s*image:\\s*\\).*|\\1${newImage}|g" kubernetes/deployment.yaml
+                        """
 
-                sh """
-                    git config user.name "Jenkins"
-                    git config user.email "jenkins@example.com"
-                    git add kubernetes/deployment.yaml
-                    git diff --cached --quiet || git commit -m "Update Kubernetes deployment with image tag: ${ImageTag} [skip ci]"
-                    git remote set-url origin https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/Shubhankar-24x/Ai-career-coach.git
-                    git push origin main
-                """
+                        sh """
+                            git config user.name "Jenkins"
+                            git config user.email "jenkins@example.com"
+                            git add kubernetes/deployment.yaml
+                            git diff --cached --quiet || git commit -m "Update Kubernetes deployment with image tag: ${ImageTag} [skip ci]"
+                            git remote set-url origin https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/Shubhankar-24x/Ai-career-coach.git
+                            git pull origin ${params.GIT_BRANCH}
+                            git push origin ${params.GIT_BRANCH}
+                        """
+                    }
+                }
             }
-        }
-    }
-}
-
 
     post {
         failure {
