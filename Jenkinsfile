@@ -116,6 +116,35 @@ pipeline {
                 }
             }
         }
+
+        stage("Update Kubernetes Manifest") {
+                steps {
+                withCredentials([
+                    usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'dockerHubUser', passwordVariable: 'dockerHubPass'),
+                    usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_TOKEN')
+                ]) {
+                    script {
+                        def newImage = "${dockerHubUser}/${ProjectName}:${ImageTag}"
+                        echo "Updating kubernetes/deployment.yaml with image: ${newImage}"
+
+                        sh """
+                            sed -i "s|^\\(\\s*image:\\s*\\).*|\\1${newImage}|g" kubernetes/deployment.yaml
+                        """
+
+                        sh """
+                            git config user.name "Jenkins"
+                            git config user.email "jenkins@example.com"
+                            git add kubernetes/deployment.yaml
+                            git diff --cached --quiet || git commit -m "Update Kubernetes deployment with image tag: ${ImageTag} [skip ci]"
+                            git remote set-url origin https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/Shubhankar-24x/Ai-career-coach.git
+                            git pull origin ${params.GIT_BRANCH}
+                            git push origin ${params.GIT_BRANCH}
+                        """
+                    }
+                }
+            }
+            
+            }
     }
 
     post {
