@@ -38,7 +38,7 @@ spec:
       serviceAccountName: career-coach-sa
       containers:
       - name: career-coach-frontend
-        image: shubhankar24/career-coach:v2.1
+        image: shubhankar24/career-coach:v2.3
         resources:      # Resource Quotas for limitation of CPU and Memory Usage
           requests:
             memory: "128Mi"
