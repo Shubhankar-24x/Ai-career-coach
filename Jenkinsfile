@@ -1,15 +1,23 @@
 pipeline {
-    agent { label 'tyson' }
+    agent any
 
     environment {
         SONAR_HOME = tool 'Sonar'
         ProjectName = 'career-coach'
         ImageTag = "${params.FRONTEND_DOCKER_TAG}"
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = credentials('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY')
+        CLERK_SECRET_KEY = credentials('CLERK_SECRET_KEY')
+        DATABASE_URL = credentials('DATABASE_URL')
+        GEMINI_API_KEY = credentials('GEMINI_API_KEY')
     }
 
     parameters {
-        string(name: 'FRONTEND_DOCKER_TAG', defaultValue: '', description: 'Docker image tag for frontend')
+        string(name: 'FRONTEND_DOCKER_TAG', defaultValue: 'v1', description: 'Docker image tag for frontend')
+       // string(name: 'NEXUS_URL', defaultValue: 'http://3.17.165.120:8082', description: 'Docker registry URL (not Nexus UI)')
+        //string(name: 'NEXUS_REPOSITORY', defaultValue: 'Docker-Image', description: 'Docker repository name (used only for naming)')
+        string(name: 'GIT_BRANCH', defaultValue: 'dev', description: 'Git branch to update deployment.yaml')
     }
+
 
     stages {
 
@@ -22,20 +30,10 @@ pipeline {
 
         stage("Git: Clone") {
             steps {
-                git url: 'https://github.com/Shubhankar-24x/Ai-career-coach.git', branch: 'test'
+                git url: 'https://github.com/Shubhankar-24x/Ai-career-coach.git', branch: 'main'
             }
         }
 
-        stage("NodeJS: Installing") {
-            steps {
-                sh '''
-                    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-                    sudo apt-get install -y nodejs
-                    node -v
-                    npm -v
-                '''
-            }
-        }
 
         stage('OWASP Dependency-Check Vulnerabilities') {
             steps {
@@ -71,51 +69,79 @@ pipeline {
             }
         }
 
-        stage("Docker: Build Images") {
-            environment {
-                NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = credentials('clerk-publishable-key')
-                CLERK_SECRET_KEY = credentials('clerk-secret-key')
-                DATABASE_URL = credentials('database-url')
-                GEMINI_API_KEY = credentials('gemini-api-key')
-            }
+
+        stage("Docker: Image Build") {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-cred', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
                     echo "Building Docker Image: ${dockerHubUser}/${ProjectName}:${ImageTag}"
                     sh """
-                        docker build -t ${dockerHubUser}/${ProjectName}:${ImageTag} \
-                        --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY} \
-                        --build-arg CLERK_SECRET_KEY=${CLERK_SECRET_KEY} \
-                        --build-arg DATABASE_URL=${DATABASE_URL} \
+                        docker build -t ${dockerHubUser}/${ProjectName}:${ImageTag} \\
+                        --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY} \\
+                        --build-arg CLERK_SECRET_KEY=${CLERK_SECRET_KEY} \\
+                        --build-arg DATABASE_URL=${DATABASE_URL} \\
                         --build-arg GEMINI_API_KEY=${GEMINI_API_KEY} .
                     """
                 }
             }
         }
 
-        stage("Trivy Image Scanning") {
-            steps {
-                withCredentials([usernamePassword(credentialsId: 'docker-cred', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
-                    echo "Scanning the Docker Image for Vulnerabilities"
-                    sh "trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 0 ${dockerHubUser}/${ProjectName}:${ImageTag} > trivy-results.txt"
-                }
-            }
-        }
 
-        stage("Docker: Image Push") {
+        stage("Trivy: Image Scanning") {
             steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'docker-cred', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
-                        echo "Logging into DockerHub"
-                        sh "docker login -u ${dockerHubUser} -p ${dockerHubPass}"
-                        echo "Login to DockerHub successful"
-
-                        echo "Pushing image to Docker Hub"
-                        sh "docker push ${dockerHubUser}/${ProjectName}:${ImageTag}"
-                        echo "Image pushed successfully to Docker Hub"
+                withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'dockerHubUser', passwordVariable: 'dockerHubPass')]) {
+                    script {
+                        def reportDir = "trivy-image-report/${ProjectName}-${ImageTag}"
+                        sh "mkdir -p ${reportDir}"
+                        echo "Scanning the Docker Image for Vulnerabilities"
+                        sh "trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 0 ${dockerHubUser}/${ProjectName}:${ImageTag} > ${reportDir}/trivy-results.txt"
                     }
                 }
             }
         }
+
+           stage("Docker: Image Push") {
+                steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'docker-cred', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
+                        echo "Logging into DockerHub"
+                        sh "docker login -u ${dockerHubUser} -p ${dockerHubPass}"
+
+                        echo "Pushing image to Docker Hub"
+                        sh "docker push ${dockerHubUser}/${ProjectName}:${ImageTag}"
+                    }
+                }
+            }
+        }
+
+            stage("Update Kubernetes Manifest") {
+                steps {
+                withCredentials([
+                    usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'dockerHubUser', passwordVariable: 'dockerHubPass'),
+                    usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_TOKEN')
+                ]) {
+                    script {
+                        def newImage = "${dockerHubUser}/${ProjectName}:${ImageTag}"
+                        echo "Updating kubernetes/deployment.yaml with image: ${newImage}"
+
+                        sh """
+                            sed -i "s|^\\(\\s*image:\\s*\\).*|\\1${newImage}|g" kubernetes/deployment.yaml
+                        """
+
+                        sh """
+                            git config user.name "Jenkins"
+                            git config user.email "jenkins@example.com"
+                            git add kubernetes/deployment.yaml
+                            git diff --cached --quiet || git commit -m "Update Kubernetes deployment with image tag: ${ImageTag} [skip ci]"
+                            git remote set-url origin https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/Shubhankar-24x/Ai-career-coach.git
+                            git config pull.rebase false
+                            git pull origin ${params.GIT_BRANCH}
+                            git push origin ${params.GIT_BRANCH}
+                        """
+                    }
+                }
+            }
+            
+            }
     }
 
     post {
@@ -127,4 +153,9 @@ pipeline {
         }
     }
 }
-// This Jenkinsfile is designed to automate the CI/CD pipeline for the Ai Career Coach project.
+
+     
+
+
+
+    
