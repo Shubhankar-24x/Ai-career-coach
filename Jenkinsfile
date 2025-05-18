@@ -128,6 +128,8 @@ pipeline {
                         """
 
 sh """
+    set +e
+
     git config user.name "Jenkins"
     git config user.email "jenkins@example.com"
 
@@ -144,20 +146,26 @@ sh """
     # Fetch latest remote branches
     git fetch origin
 
-    # Create and checkout local 'test' branch from remote
+    # Create and checkout local '${params.GIT_BRANCH}' branch from remote
     git checkout -B ${params.GIT_BRANCH} origin/${params.GIT_BRANCH}
 
-    # Cherry-pick previously committed change onto 'test'
-    git cherry-pick \$COMMIT_HASH || {
+    # Cherry-pick previously committed change onto the target branch
+    git cherry-pick \$COMMIT_HASH
+    STATUS=\$?
+
+    if [ \$STATUS -ne 0 ]; then
         echo "❌ Cherry-pick failed due to conflict. Resolving using remote version."
         git checkout --theirs kubernetes/deployment.yaml
         git add kubernetes/deployment.yaml
         git cherry-pick --continue
-    }
+    fi
 
-    # Push to 'test' branch
+    set -e
+
+    # Push to '${params.GIT_BRANCH}' branch
     git push origin ${params.GIT_BRANCH}
 """
+
 
 
                     }
