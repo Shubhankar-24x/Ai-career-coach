@@ -5,10 +5,14 @@ pipeline {
         SONAR_HOME = tool 'Sonar'
         ProjectName = 'career-coach'
         ImageTag = "${params.FRONTEND_DOCKER_TAG}"
+        NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = credentials('NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY')
+        CLERK_SECRET_KEY = credentials('CLERK_SECRET_KEY')
+        DATABASE_URL = credentials('DATABASE_URL')
+        GEMINI_API_KEY = credentials('GEMINI_API_KEY')
     }
 
     parameters {
-        string(name: 'FRONTEND_DOCKER_TAG', defaultValue: '', description: 'Docker image tag for frontend')
+        string(name: 'FRONTEND_DOCKER_TAG', defaultValue: 'V1', description: 'Docker image tag for frontend')
     }
 
     stages {
@@ -23,17 +27,6 @@ pipeline {
         stage("Git: Clone") {
             steps {
                 git url: 'https://github.com/Shubhankar-24x/Ai-career-coach.git', branch: 'main'
-            }
-        }
-
-        stage("NodeJS: Installing") {
-            steps {
-                sh '''
-                    curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
-                    sudo apt-get install -y nodejs
-                    node -v
-                    npm -v
-                '''
             }
         }
 
@@ -71,26 +64,21 @@ pipeline {
             }
         }
 
-        stage("Docker: Build Images") {
-            environment {
-                NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY = credentials('clerk-publishable-key')
-                CLERK_SECRET_KEY = credentials('clerk-secret-key')
-                DATABASE_URL = credentials('database-url')
-                GEMINI_API_KEY = credentials('gemini-api-key')
-            }
+stage("Docker: Image Build") {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-cred', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
                     echo "Building Docker Image: ${dockerHubUser}/${ProjectName}:${ImageTag}"
                     sh """
-                        docker build -t ${dockerHubUser}/${ProjectName}:${ImageTag} \
-                        --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY} \
-                        --build-arg CLERK_SECRET_KEY=${CLERK_SECRET_KEY} \
-                        --build-arg DATABASE_URL=${DATABASE_URL} \
+                        docker build -t ${dockerHubUser}/${ProjectName}:${ImageTag} \\
+                        --build-arg NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY} \\
+                        --build-arg CLERK_SECRET_KEY=${CLERK_SECRET_KEY} \\
+                        --build-arg DATABASE_URL=${DATABASE_URL} \\
                         --build-arg GEMINI_API_KEY=${GEMINI_API_KEY} .
                     """
                 }
             }
         }
+
 
         stage("Trivy Image Scanning") {
             steps {
@@ -116,8 +104,7 @@ pipeline {
                 }
             }
         }
-
-        stage("Update Kubernetes Manifest") {
+ stage("Update Kubernetes Manifest") {
                 steps {
                 withCredentials([
                     usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'dockerHubUser', passwordVariable: 'dockerHubPass'),
@@ -137,8 +124,8 @@ pipeline {
                             git add kubernetes/deployment.yaml
                             git diff --cached --quiet || git commit -m "Update Kubernetes deployment with image tag: ${ImageTag} [skip ci]"
                             git remote set-url origin https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/Shubhankar-24x/Ai-career-coach.git
-                            git pull origin ${params.GIT_BRANCH}
-                            git push origin ${params.GIT_BRANCH}
+                            git pull origin main
+                            git push origin main
                         """
                     }
                 }
