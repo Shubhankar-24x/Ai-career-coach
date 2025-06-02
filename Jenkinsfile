@@ -91,10 +91,10 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'dockerHubUser', passwordVariable: 'dockerHubPass')]) {
                     script {
-                        def reportDir = "trivy-image-report/${ProjectName}-${ImageTag}"
-                        sh "mkdir -p ${reportDir}"
+                        
                         echo "Scanning the Docker Image for Vulnerabilities"
-                        sh "trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 0 ${dockerHubUser}/${ProjectName}:${ImageTag} > ${reportDir}/trivy-results.txt"
+                        //sh "trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 0 ${dockerHubUser}/${ProjectName}:${ImageTag} > ${reportDir}/trivy-results.txt"
+                        sh "trivy image --format table -o dimage.html ${dockerHubUser}/${ProjectName}:${ImageTag}"
                     }
                 }
             }
