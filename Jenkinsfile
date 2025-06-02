@@ -134,7 +134,7 @@ agent any
                             git add kubernetes/deployment.yaml
                             git diff --cached --quiet || git commit -m "Update Kubernetes deployment with image tag: ${ImageTag} [skip ci]"
                             git remote set-url origin https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/Shubhankar-24x/Ai-career-coach.git
-                            git pull origin main
+                            git pull --no-rebase origin main
                             git push origin main
                         """
                     }
