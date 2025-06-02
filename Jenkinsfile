@@ -45,7 +45,8 @@ pipeline {
         stage("Trivy: Filesystem Scanning") {
             steps {
                 echo "Scanning the Filesystem for Vulnerabilities"
-                sh "trivy fs ."
+                //sh "trivy fs ."
+                sh "trivy fs --format table -o fs.html ."
             }
         }
 
