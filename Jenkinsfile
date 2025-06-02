@@ -1,5 +1,7 @@
 pipeline {
-    agent { label 'tyson' }
+    //agent { label 'tyson' }
+
+agent any
 
     environment {
         SONAR_HOME = tool 'Sonar'
@@ -30,6 +32,14 @@ pipeline {
             }
         }
 
+        stage("Npm Packages Installation") {
+            steps {
+                sh 'pwd'  // This will print the current working directory
+                sh 'npm install' // Dependency Install
+                
+            }
+        }
+                
         stage('OWASP Dependency-Check Vulnerabilities') {
             steps {
                 dependencyCheck additionalArguments: '--scan ./', odcInstallation: 'OWASP Dependency-Check Vulnerabilities'
@@ -40,7 +50,7 @@ pipeline {
         stage("Trivy: Filesystem Scanning") {
             steps {
                 echo "Scanning the Filesystem for Vulnerabilities"
-                sh "trivy fs ."
+                sh "trivy fs --format table -o fs.html ."
             }
         }
 
@@ -64,7 +74,7 @@ pipeline {
             }
         }
 
-stage("Docker: Image Build") {
+        stage("Docker: Image Build") {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-cred', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
                     echo "Building Docker Image: ${dockerHubUser}/${ProjectName}:${ImageTag}"
@@ -84,7 +94,7 @@ stage("Docker: Image Build") {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'docker-cred', passwordVariable: 'dockerHubPass', usernameVariable: 'dockerHubUser')]) {
                     echo "Scanning the Docker Image for Vulnerabilities"
-                    sh "trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 0 ${dockerHubUser}/${ProjectName}:${ImageTag} > trivy-results.txt"
+                    sh "trivy image --format table -o dimage.html ${dockerHubUser}/${ProjectName}:${ImageTag}"
                 }
             }
         }
@@ -104,7 +114,7 @@ stage("Docker: Image Build") {
                 }
             }
         }
- stage("Update Kubernetes Manifest") {
+        stage("Update Kubernetes Manifest") {
                 steps {
                 withCredentials([
                     usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'dockerHubUser', passwordVariable: 'dockerHubPass'),
@@ -121,10 +131,10 @@ stage("Docker: Image Build") {
                         sh """
                             git config user.name "Jenkins"
                             git config user.email "jenkins@example.com"
-                            git pull origin main
                             git add kubernetes/deployment.yaml
                             git diff --cached --quiet || git commit -m "Update Kubernetes deployment with image tag: ${ImageTag} [skip ci]"
                             git remote set-url origin https://${GIT_USERNAME}:${GIT_TOKEN}@github.com/Shubhankar-24x/Ai-career-coach.git
+                            git pull origin main
                             git push origin main
                         """
                     }
