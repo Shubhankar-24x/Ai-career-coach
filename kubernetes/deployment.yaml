@@ -26,6 +26,7 @@ metadata:
   namespace: career-coach
 spec:
   replicas: 2
+  revisionHistoryLimit: 1
   selector:
     matchLabels:
       app: career-coach
