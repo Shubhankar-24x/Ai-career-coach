@@ -9,7 +9,7 @@ metadata:
 spec:
   ingressClassName: alb   #This is for AWS ALB Ingress Controller
   rules:
-  - host: www.devopsbyshubhankar.shop
+  - host: www.devopsbyshubhankar.shop 
     http:
       paths:
       - pathType: Prefix
