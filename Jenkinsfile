@@ -32,13 +32,6 @@ agent any
             }
         }
 
-        stage("Npm Packages Installation") {
-            steps {
-                sh 'pwd'  // This will print the current working directory
-                sh 'npm install' // Dependency Install
-                
-            }
-        }
                 
         stage('OWASP Dependency-Check Vulnerabilities') {
             steps {
